@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Panel - Student Search</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        /* Login Screen */
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .login-logo {
+            color: #1e3c72;
+            margin-bottom: 30px;
+        }
+        
+        .login-logo i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .login-logo h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .login-message {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+        
+        .password-input-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .password-input {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .password-input:focus {
+            border-color: #1e3c72;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+        }
+        
+        .password-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 1.2rem;
+        }
+        
+        .login-btn {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(30, 60, 114, 0.3);
+        }
+        
+        .login-btn:active {
+            transform: translateY(0);
+        }
+        
+        .error-message {
+            color: #ff6b6b;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        /* Dashboard - Hidden by default */
+        .dashboard {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 800px;
+            overflow: hidden;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .logo i {
+            font-size: 2.5rem;
+        }
+        
+        .logo h1 {
+            font-size: 2rem;
+            font-weight: 600;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Search Section */
+        .search-section {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .search-box {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        .search-title {
+            color: #1e3c72;
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+        
+        .search-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .search-tab {
+            flex: 1;
+            min-width: 120px;
+            padding: 15px;
+            background: #f1f3f5;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #555;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-tab i {
+            font-size: 1.3rem;
+        }
+        
+        .search-tab.active {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 60, 114, 0.3);
+        }
+        
+        .search-input-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 16px 20px 16px 50px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            border-color: #1e3c72;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 1.2rem;
+        }
+        
+        .search-btn {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(30, 60, 114, 0.3);
+        }
+        
+        /* Results Section */
+        .results-section {
+            padding: 30px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .results-title {
+            color: #1e3c72;
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+        
+        /* Student Card */
+        .student-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid #1e3c72;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f2f5;
+        }
+        
+        .student-name {
+            color: #1e3c72;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .student-roll {
+            background: #1e3c72;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        
+        .student-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .detail-item i {
+            color: #1e3c72;
+            font-size: 1.2rem;
+            width: 24px;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+            min-width: 120px;
+        }
+        
+        .detail-value {
+            color: #333;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #eee;
+        }
+        
+        .footer p {
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .made-by {
+            font-weight: 600;
+            color: #1e3c72;
+            font-size: 1.1rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .search-options {
+                flex-direction: column;
+            }
+            
+            .student-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .detail-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .detail-label {
+                min-width: auto;
+            }
+            
+            .dashboard {
+                margin: 10px;
+            }
+            
+            .login-container {
+                padding: 30px 20px;
+            }
+        }
+        
+        /* Loading Animation */
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #1e3c72;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-container" id="loginScreen">
+        <div class="login-logo">
+            <i class="fas fa-user-lock"></i>
+            <h1>ইউজার লগইন</h1>
+        </div>
+        <p class="login-message">শুধুমাত্র অথোরাইজ্ড ইউজাররা ছাত্র তথ্য দেখতে পারবেন</p>
+        
+        <div class="password-input-container">
+            <i class="fas fa-lock password-icon"></i>
+            <input type="password" 
+                   class="password-input" 
+                   id="passwordInput" 
+                   placeholder="পাসওয়ার্ড দিন"
+                   autocomplete="off">
+        </div>
+        
+        <button class="login-btn" id="loginBtn">
+            <i class="fas fa-sign-in-alt"></i>
+            লগইন করুন
+        </button>
+        
+        <div class="error-message" id="errorMessage">
+            ভুল পাসওয়ার্ড! আবার চেষ্টা করুন।
+        </div>
+    </div>
+
+    <!-- Dashboard (Hidden until login) -->
+    <div class="dashboard" id="dashboard">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                <h1>ছাত্র তথ্য সন্ধান</h1>
+            </div>
+            <p>নাম, মোবাইল নম্বর বা রোল নং দিয়ে খুঁজুন</p>
+            <button class="logout-btn" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i>
+                লগআউট
+            </button>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-box">
+                <h2 class="search-title">ছাত্র খুঁজুন</h2>
+                
+                <div class="search-options">
+                    <button class="search-tab active" data-type="name">
+                        <i class="fas fa-user"></i>
+                        <span>নাম দিয়ে</span>
+                    </button>
+                    <button class="search-tab" data-type="phone">
+                        <i class="fas fa-phone"></i>
+                        <span>মোবাইল নম্বর</span>
+                    </button>
+                    <button class="search-tab" data-type="roll">
+                        <i class="fas fa-id-card"></i>
+                        <span>রোল নং</span>
+                    </button>
+                </div>
+
+                <div class="search-input-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" 
+                           class="search-input" 
+                           id="searchInput" 
+                           placeholder="ছাত্রের নাম লিখুন..."
+                           data-placeholder-name="ছাত্রের নাম লিখুন..."
+                           data-placeholder-phone="মোবাইল নম্বর লিখুন..."
+                           data-placeholder-roll="রোল নং লিখুন...">
+                </div>
+
+                <button class="search-btn" id="searchBtn">
+                    <i class="fas fa-search"></i>
+                    খুঁজুন
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section">
+            <h2 class="results-title">ফলাফল</h2>
+            <div id="resultsContainer">
+                <div class="no-results">
+                    <i class="fas fa-search"></i>
+                    <h3>খুঁজতে শুরু করুন</h3>
+                    <p>উপরে নাম, মোবাইল নম্বর বা রোল নং দিয়ে খুঁজুন</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>ছাত্র তথ্য সন্ধান সিস্টেম</p>
+            <p class="made-by">Made By Töxîç</p>
+            <p>© 2023 সকল অধিকার সংরক্ষিত</p>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration (আপনার Firebase)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCRBU49Rniqfm4lp4q-nHC9X7fbHpeGhWk",
+            authDomain: "student-info-710ad.firebaseapp.com",
+            databaseURL: "https://student-info-710ad-default-rtdb.firebaseio.com",
+            projectId: "student-info-710ad",
+            storageBucket: "student-info-710ad.firebasestorage.app",
+            messagingSenderId: "449371034604",
+            appId: "1:449371034604:web:f9203382fd6d4bec6ba6c9",
+            measurementId: "G-Z1KF5Y7PY7"
+        };
+
+        // Firebase Initialize
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // DOM Elements
+        const loginScreen = document.getElementById('loginScreen');
+        const dashboard = document.getElementById('dashboard');
+        const passwordInput = document.getElementById('passwordInput');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const searchTabs = document.querySelectorAll('.search-tab');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+
+        // Current search type
+        let currentSearchType = 'name';
+
+        // Correct Password
+        const CORRECT_PASSWORD = "User00";
+
+        // Check if already logged in
+        if (localStorage.getItem('userLoggedIn') === 'true') {
+            showDashboard();
+        }
+
+        // Login Function
+        loginBtn.addEventListener('click', () => {
+            const enteredPassword = passwordInput.value.trim();
+            
+            if (enteredPassword === CORRECT_PASSWORD) {
+                // Save login state
+                localStorage.setItem('userLoggedIn', 'true');
+                showDashboard();
+                errorMessage.style.display = 'none';
+                passwordInput.value = '';
+            } else {
+                errorMessage.style.display = 'block';
+                passwordInput.value = '';
+                passwordInput.focus();
+                
+                // Add shake animation
+                passwordInput.style.animation = 'none';
+                setTimeout(() => {
+                    passwordInput.style.animation = 'shake 0.5s';
+                }, 10);
+            }
+        });
+
+        // Login on Enter key
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loginBtn.click();
+            }
+        });
+
+        // Logout Function
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('userLoggedIn');
+            showLoginScreen();
+        });
+
+        // Show Dashboard
+        function showDashboard() {
+            loginScreen.style.display = 'none';
+            dashboard.style.display = 'block';
+            searchInput.focus();
+        }
+
+        // Show Login Screen
+        function showLoginScreen() {
+            loginScreen.style.display = 'block';
+            dashboard.style.display = 'none';
+            passwordInput.focus();
+        }
+
+        // Shake animation for wrong password
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% {transform: translateX(0);}
+                10%, 30%, 50%, 70%, 90% {transform: translateX(-5px);}
+                20%, 40%, 60%, 80% {transform: translateX(5px);}
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Tab Switching
+        searchTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs
+                searchTabs.forEach(t => t.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Update current search type
+                currentSearchType = tab.dataset.type;
+                
+                // Update placeholder
+                const placeholder = searchInput.getAttribute(`data-placeholder-${currentSearchType}`);
+                searchInput.placeholder = placeholder;
+                
+                // Clear input and results
+                searchInput.value = '';
+                showNoResults('খুঁজতে শুরু করুন', 'উপরে নাম, মোবাইল নম্বর বা রোল নং দিয়ে খুঁজুন');
+                searchInput.focus();
+            });
+        });
+
+        // Search Function
+        searchBtn.addEventListener('click', performSearch);
+        
+        // Search on Enter key
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        function performSearch() {
+            const query = searchInput.value.trim();
+            
+            if (!query) {
+                showNoResults('খুঁজার ফিল্ড খালি', 'দয়া করে কিছু লিখুন');
+                return;
+            }
+
+            showLoading();
+            
+            // Get all students from Firebase Realtime Database
+            database.ref('students').once('value')
+                .then((snapshot) => {
+                    if (!snapshot.exists()) {
+                        showNoResults('কোন ছাত্র পাওয়া যায়নি', 'ডাটাবেজে কোনো ছাত্র নেই');
+                        return;
+                    }
+
+                    const students = [];
+                    snapshot.forEach((childSnapshot) => {
+                        const student = childSnapshot.val();
+                        student.id = childSnapshot.key;
+                        students.push(student);
+                    });
+
+                    // Filter students based on search type
+                    let filteredStudents = [];
+                    
+                    if (currentSearchType === 'name') {
+                        // Search by name (case insensitive, partial match)
+                        filteredStudents = students.filter(student => 
+                            student.name && student.name.toLowerCase().includes(query.toLowerCase())
+                        );
+                    } 
+                    else if (currentSearchType === 'phone') {
+                        // Search by phone (exact match)
+                        filteredStudents = students.filter(student => 
+                            student.phone && student.phone === query
+                        );
+                    }
+                    else if (currentSearchType === 'roll') {
+                        // Search by roll (exact match)
+                        filteredStudents = students.filter(student => 
+                            student.roll && student.roll === query
+                        );
+                    }
+
+                    if (filteredStudents.length === 0) {
+                        showNoResults('কোন ছাত্র পাওয়া যায়নি', 'দয়া করে ভিন্ন তথ্য দিয়ে চেষ্টা করুন');
+                        return;
+                    }
+
+                    displayResults(filteredStudents);
+                })
+                .catch((error) => {
+                    console.error("Search error: ", error);
+                    showNoResults('সমস্যা হয়েছে', 'দয়া করে আবার চেষ্টা করুন');
+                });
+        }
+
+        // Display Results
+        function displayResults(students) {
+            resultsContainer.innerHTML = '';
+            
+            students.forEach((student) => {
+                const studentCard = createStudentCard(student);
+                resultsContainer.appendChild(studentCard);
+            });
+        }
+
+        // Create Student Card
+        function createStudentCard(student) {
+            const card = document.createElement('div');
+            card.className = 'student-card';
+            
+            card.innerHTML = `
+                <div class="student-header">
+                    <div class="student-name">${student.name || 'নাম নেই'}</div>
+                    <div class="student-roll">রোল: ${student.roll || 'N/A'}</div>
+                </div>
+                
+                <div class="student-details">
+                    <div class="detail-item">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span class="detail-label">ক্লাস:</span>
+                        <span class="detail-value">${student.class ? student.class + 'শ শ্রেণি' : 'তথ্য নেই'}</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <i class="fas fa-layer-group"></i>
+                        <span class="detail-label">বিভাগ:</span>
+                        <span class="detail-value">${student.section || 'তথ্য নেই'}</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <i class="fas fa-phone"></i>
+                        <span class="detail-label">মোবাইল:</span>
+                        <span class="detail-value">${student.phone || 'তথ্য নেই'}</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <i class="fas fa-user-friends"></i>
+                        <span class="detail-label">অভিভাবক:</span>
+                        <span class="detail-value">${student.parent || 'তথ্য নেই'}</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span class="detail-label">ঠিকানা:</span>
+                        <span class="detail-value">${student.address || 'তথ্য নেই'}</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span class="detail-label">যোগদান তারিখ:</span>
+                        <span class="detail-value">${student.createdAt ? formatDate(student.createdAt) : 'তথ্য নেই'}</span>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // Format Date
+        function formatDate(dateString) {
+            if (!dateString) return 'তথ্য নেই';
+            
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('bn-BD', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            } catch (error) {
+                return 'তারিখ অজানা';
+            }
+        }
+
+        // Show Loading
+        function showLoading() {
+            resultsContainer.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <h3>খুঁজছি...</h3>
+                    <p>অনুগ্রহ করে অপেক্ষা করুন</p>
+                </div>
+            `;
+        }
+
+        // Show No Results
+        function showNoResults(title, message) {
+            resultsContainer.innerHTML = `
+                <div class="no-results">
+                    <i class="fas fa-search"></i>
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        // Auto-focus on password input when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            passwordInput.focus();
+            
+            // Clear login state if page is refreshed
+            if (performance.navigation.type === 1) {
+                // Page was reloaded
+                localStorage.removeItem('userLoggedIn');
+            }
+        });
+    </script>
+</body>
+</html>
